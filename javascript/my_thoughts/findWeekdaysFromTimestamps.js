@@ -1,12 +1,49 @@
+/*
+  Problem Statement
+  Given:
+
+  Two dates as strings in the format DD/MM/YYYY (a start date and an end date, inclusive).
+
+  The name of a weekday (e.g., "Friday", "thursday", etc.).
+
+  Task:
+  Write a program in pure JavaScript (no external libraries or packages) that calculates how many times the specified weekday occurs between the two dates, inclusive of both endpoints.
+
+  Example:
+  If the input is:
+
+  Start date: "29/09/2009"
+
+  End date: "07/09/2026"
+
+  Day name: "thursday"
+
+  The program should output:
+
+  text
+  Between 2009-09-29 and 2026-09-07, there are 885 thursdays
+  Requirements:
+
+  Use only pure JavaScript.
+
+  Handle any valid date range and any valid weekday name (case-insensitive).
+
+  Optimize the solution to efficiently handle very large date ranges without iterating day-by-day.
+*/
+/*
+----------------------------------------------
+----------------------------------------------
+*/ 
+
 const startDateStr = "29/09/2009";
 const endDateStr = "07/09/2026";
 const dayName = "thursday";
 
-/*
-    console.log("start date: ", startDateStr);
-    console.log("End date: ", endDateStr);
-    console.log("day: ", dayName);
-*/
+// /*
+//     console.log("start date: ", startDateStr);
+//     console.log("End date: ", endDateStr);
+//     console.log("day: ", dayName);
+// */
 
 const parseDateUTC = (dateStr) => {
   const parts = dateStr.split("/");
@@ -55,11 +92,11 @@ const dayNameToNumber = (dayName) => {
   return days[day];
 };
 // testing
-/*
-    console.log(dayNameToNumber("Friday"));
-    console.log(dayNameToNumber("  monday  "));
-    console.log(dayNameToNumber("SUNDAY "))
-*/
+// /*
+//     console.log(dayNameToNumber("Friday"));
+//     console.log(dayNameToNumber("  monday  "));
+//     console.log(dayNameToNumber("SUNDAY "))
+// */
 
 // ------------------------------
 // count how many times the target weekday occurs between two dates
@@ -79,36 +116,37 @@ const countSpecificWeekdays = (startDate, endDate, targetDayNumber) => {
   return count;
 };
 
-const countWeekdays = (startDate, endDate, targetDay) =>{
-    const millisecondsPerDay = 24 * 60 * 60 * 1000;
-    const totalDays = Math.floor((endDate - startDate) / millisecondsPerDay) + 1;
+const countWeekdays = (startDate, endDate, targetDay) => {
+  const millisecondsPerDay = 24 * 60 * 60 * 1000;
+  const totalDays = Math.floor((endDate - startDate) / millisecondsPerDay) + 1;
 
-    const startDay = startDate.getUTCDay();
-    
-    const fullWeeks = Math.floor(totalDays / 7);
+  const startDay = startDate.getUTCDay();
 
-    let count = fullWeeks;
+  const fullWeeks = Math.floor(totalDays / 7);
 
-    const leftOverDays = totalDays % 7;
+  let count = fullWeeks;
 
-    const endPartialDay = (startDay + leftOverDays - 1) % 7;
+  const leftOverDays = totalDays % 7;
 
-    if((startDay <= endPartialDay && targetDay >= startDay && targetDay <= endPartialDay) || 
-    (startDay > endPartialDay && (targetDay >= startDay || targetDay <= endPartialDay) )) {
-        count ++;
-    }
-    return count;
-}
+  const endPartialDay = (startDay + leftOverDays - 1) % 7;
+
+  if (
+    (startDay <= endPartialDay &&
+      targetDay >= startDay &&
+      targetDay <= endPartialDay) ||
+    (startDay > endPartialDay &&
+      (targetDay >= startDay || targetDay <= endPartialDay))
+  ) {
+    count++;
+  }
+  return count;
+};
 // testing
 const startDateUTC = parseDateUTC(startDateStr);
 const endDateUTC = parseDateUTC(endDateStr);
 const targetDayNumber = dayNameToNumber(dayName);
 
-const totalDays = countWeekdays(
-  startDateUTC,
-  endDateUTC,
-  targetDayNumber
-);
+const totalDays = countWeekdays(startDateUTC, endDateUTC, targetDayNumber);
 console.log(
   `Beetween ${formatUTCDate(startDateUTC)} and ${formatUTCDate(
     endDateUTC
