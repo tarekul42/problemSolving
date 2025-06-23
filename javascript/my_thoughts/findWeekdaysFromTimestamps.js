@@ -33,46 +33,19 @@
 /*
 ----------------------------------------------
 ----------------------------------------------
-*/ 
+*/
 
 const startDateStr = "29/09/2009";
-const endDateStr = "07/09/2026";
-const dayName = "thursday";
+const endDateStr = "07/09/2025";
+const dayName = "sunday";
 
-// /*
-//     console.log("start date: ", startDateStr);
-//     console.log("End date: ", endDateStr);
-//     console.log("day: ", dayName);
-// */
-
+// parse date string in DD/MM/YYYY format to UTC Date object
 const parseDateUTC = (dateStr) => {
-  const parts = dateStr.split("/");
-  const day = parseInt(parts[0], 10);
-  const month = parseInt(parts[1], 10) - 1;
-  const year = parseInt(parts[2], 10);
-  return new Date(Date.UTC(year, month, day));
+  const [day, month, year] = dateStr.split("/").map(Number);
+  return new Date(Date.UTC(year, month - 1, day));
 };
 
-const formatUTCDate = (date) => {
-  if (!(date instanceof Date)) {
-    throw new Error("Invalid Date object passed to formatUTCDate");
-  }
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
-// const startDateUTC = parseDateUTC(startDateStr);
-// const endDateUTC = parseDateUTC(endDateStr);
-
-// console.log(formatUTCDate(startDateUTC));
-// console.log(formatUTCDate(endDateUTC));
-
-// --------------------------
-// convert day name to number
-// --------------------------
-
+// Convert weekday name to number (0-6)
 const dayNameToNumber = (dayName) => {
   const days = {
     sunday: 0,
@@ -84,71 +57,55 @@ const dayNameToNumber = (dayName) => {
     saturday: 6,
   };
 
-  const day = dayName.trim().toLowerCase();
-  if (!(day in days)) {
-    throw new Error("Invalid day name: ", dayName);
-  }
-
-  return days[day];
-};
-// testing
-// /*
-//     console.log(dayNameToNumber("Friday"));
-//     console.log(dayNameToNumber("  monday  "));
-//     console.log(dayNameToNumber("SUNDAY "))
-// */
-
-// ------------------------------
-// count how many times the target weekday occurs between two dates
-// -------------------------------
-
-const countSpecificWeekdays = (startDate, endDate, targetDayNumber) => {
-  let count = 0;
-  let currentDate = new Date(startDate);
-
-  while (currentDate <= endDate) {
-    if (currentDate.getUTCDay() === targetDayNumber) {
-      count++;
-    }
-    currentDate.setUTCDate(currentDate.getUTCDate() + 1);
-  }
-
-  return count;
+  const normalized = dayName.trim().toLowerCase();
+  return days[normalized];
 };
 
-const countWeekdays = (startDate, endDate, targetDay) => {
-  const millisecondsPerDay = 24 * 60 * 60 * 1000;
-  const totalDays = Math.floor((endDate - startDate) / millisecondsPerDay) + 1;
+// Efficiently count weekday occurrences between dates
+const countWeekdays = (start, end, targetDay) => {
+  const msPerDay = 24 * 60 * 60 * 1000;
 
-  const startDay = startDate.getUTCDay();
+  // find first occurrence of target weekday
+  const startDay = start.getUTCDay();
+  const daysToAdd = (targetDay - startDay + 7) % 7;
+  const firstOccurrence = new Date(start);
+  firstOccurrence.setUTCDate(firstOccurrence.getUTCDate() + daysToAdd);
 
-  const fullWeeks = Math.floor(totalDays / 7);
+  // if first occurrence is after end date, return 0
+  if(firstOccurrence > end) return 0;
 
-  let count = fullWeeks;
-
-  const leftOverDays = totalDays % 7;
-
-  const endPartialDay = (startDay + leftOverDays - 1) % 7;
-
-  if (
-    (startDay <= endPartialDay &&
-      targetDay >= startDay &&
-      targetDay <= endPartialDay) ||
-    (startDay > endPartialDay &&
-      (targetDay >= startDay || targetDay <= endPartialDay))
-  ) {
-    count++;
-  }
-  return count;
+  // Calculate occurrence after first
+  const diff = end - firstOccurrence;
+  const daysAfterFirst = Math.floor(diff / msPerDay);
+  return Math.floor(daysAfterFirst / 7) + 1;
 };
-// testing
-const startDateUTC = parseDateUTC(startDateStr);
-const endDateUTC = parseDateUTC(endDateStr);
-const targetDayNumber = dayNameToNumber(dayName);
 
-const totalDays = countWeekdays(startDateUTC, endDateUTC, targetDayNumber);
-console.log(
-  `Beetween ${formatUTCDate(startDateUTC)} and ${formatUTCDate(
-    endDateUTC
-  )}, there are ${totalDays} ${dayName}s`
-);
+// Fromat date to YYYY-MM-DD
+const formatDate = (date) =>{
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+// Main execution
+try {
+  const startDate = parseDateUTC(startDateStr);
+  const endDate = parseDateUTC(endDateStr);
+  const targetDayNum = dayNameToNumber(dayName);
+
+  // validate dates
+  if (startDate > endDate) {
+    throw new Error("Start date must be before end date");
+  }
+
+  const count = countWeekdays(startDate, endDate, targetDayNum);
+  const formattedStart = formatDate(startDate);
+  const formattedEnd = formatDate(endDate);
+
+  console.log(
+    `Between ${formattedStart} and ${formattedEnd}, there are ${count} ${dayName.toLowerCase()}s`
+  );
+} catch (err) {
+  console.error("Error: ", err.message);
+}
